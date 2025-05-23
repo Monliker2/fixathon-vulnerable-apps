@@ -20,24 +20,28 @@ class ProfileController extends Controller
 
     public static function load_profile_by_id($id)
     {
+        // Валидация ID
+        if (!is_numeric($id) || $id <= 0) {
+            return response()->json(['error' => 'Invalid profile ID'], 400);
+        }
+
         $author = ModelController::get_user_by_id($id);
 
-        if(empty($author)){
-            error_log("Unable to load profile by id $id", 3, '.' . DIRECTORY_SEPARATOR . 'phdays_log.txt');
+        if (empty($author)) {
+            // Логируем только ID, не передаём пользовательские данные
+            error_log("Unable to load profile by id", 3, '.' . DIRECTORY_SEPARATOR . 'phdays_log.txt');
             return response()->json(['error' => 'Profile not found'], 404);
         }
-        $author = array_shift($author)->username;
+        $author = htmlspecialchars(array_shift($author)->username, ENT_QUOTES, 'UTF-8');
 
         $articles = ModelController::get_articles_by_user_id($id);
 
         $articles_save_data = [];
-        if(!empty($articles))
-        {
-            foreach($articles as $article)
-            {
+        if (!empty($articles)) {
+            foreach ($articles as $article) {
                 array_push($articles_save_data, [
-                    'title' => $article->title,
-                    'content' => $article->content,
+                    'title' => htmlspecialchars($article->title, ENT_QUOTES, 'UTF-8'),
+                    'content' => htmlspecialchars($article->content, ENT_QUOTES, 'UTF-8'),
                 ]);
             }
         }
@@ -49,22 +53,22 @@ class ProfileController extends Controller
 
     public static function load_my_profile()
     {
-        if(session_status() != PHP_SESSION_ACTIVE) {
-            session_start();
+        // Используем Laravel Auth вместо $_SESSION
+        $user = auth()->user();
+        if (!$user) {
+            return redirect()->route('login');
         }
 
-        $author = $_SESSION['username'];
-        $user_id = $_SESSION['userId'];
+        $author = htmlspecialchars($user->username, ENT_QUOTES, 'UTF-8');
+        $user_id = $user->id;
 
         $articles = ModelController::get_articles_by_user_id($user_id);
         $articles_save_data = [];
-        if(!empty($articles))
-        {
-            foreach($articles as $article)
-            {
+        if (!empty($articles)) {
+            foreach ($articles as $article) {
                 array_push($articles_save_data, [
-                    'title' => $article->title,
-                    'content' => $article->content,
+                    'title' => htmlspecialchars($article->title, ENT_QUOTES, 'UTF-8'),
+                    'content' => htmlspecialchars($article->content, ENT_QUOTES, 'UTF-8'),
                 ]);
             }
         }
@@ -74,6 +78,7 @@ class ProfileController extends Controller
         return View::make('my_profile', [
             'author' => $author,
             'articles' => $articles_save_data,
-            'path_to_photo' => $path_to_photo]);
+            'path_to_photo' => $path_to_photo
+        ]);
     }
 }
