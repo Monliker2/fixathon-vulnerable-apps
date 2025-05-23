@@ -25,10 +25,16 @@ class ArticleController extends Controller
         foreach ($articles as $article)
         {
             $user = ModelController::get_user_by_id($article->userId);
+            if(is_array($user) && !empty($user)) {
+                $username = array_shift($user)->username;
+            } else {
+                // Handle the case where user is not found
+                $username = 'Unknown';
+            }
             array_push($result, [
                 'title' => $article->title,
                 'content' => $article->content,
-                'author' => array_shift($user)->username,
+                'author' => $username,
                 'authorProfileUrl' => '/profile/' . $article->userId
             ]);
         }
@@ -49,10 +55,16 @@ class ArticleController extends Controller
         foreach ($articles as $article)
         {
             $author = ModelController::get_user_by_id($article->userId);
+            if(is_array($author) && !empty($author)) {
+                $authorName = array_shift($author)->username;
+            } else {
+                // Handle the case where author is not found
+                $authorName = 'Unknown';
+            }
             array_push($result, [
                 'title' => $article->title,
                 'content' => $article->content,
-                'author' => array_shift($author)->username,
+                'author' => $authorName,
                 'id' => $article->articleId,
             ]);
         }
@@ -64,11 +76,23 @@ class ArticleController extends Controller
         $article = ModelController::get_article_by_article_id($id);
         $article = array_shift($article);
         $user = ModelController::get_user_by_id($article->userId);
-        $author = array_shift($user)->username;
+        $author = ModelController::get_user_by_id($article->userId);
+        if(is_array($user) && !empty($user)) {
+            $username = array_shift($user)->username;
+        } else {
+            // Handle the case where user is not found
+            $username = 'Unknown';
+        }
+        if(is_array($author) && !empty($author)) {
+            $authorName = array_shift($author)->username;
+        } else {
+            // Handle the case where author is not found
+            $authorName = 'Unknown';
+        }
         return View::make('article_template')
             ->with('title', $article->title)
             ->with('author_id', $article->userId)
-            ->with('author', $author)
+            ->with('author', $username)
             ->with('content', $article->content);
     }
 

@@ -30,7 +30,12 @@ class AuthController extends Controller
 
         $_SESSION['username'] = $credentials['username'];
         $user = ModelController::get_user_id_by_username($credentials['username']);
-        $_SESSION['userId'] = array_shift($user)->id;
+        if(is_array($user) && !empty($user)) {
+            $_SESSION['userId'] = array_shift($user)->id;
+        } else {
+            // Handle the case where user is not found
+            return response()->json(['error' => 'User not found'], 404);
+        }
 
         $redirect_to = request('redirect_to');
         if(empty($redirect_to)){
